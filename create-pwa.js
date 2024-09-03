@@ -59,7 +59,7 @@ function customizeProject(projectPath, answers) {
     "framer-motion": "^10.16.4",
     "next-pwa": "^5.6.0",
     "tailwind-merge": "^1.14.0",
-        "next-themes": "^0.3.0",
+    "next-themes": "^0.3.0",
   };
   fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
 
@@ -291,6 +291,46 @@ export default async function Root({
 }
 `;
 
+  // Add i18n-config.ts located at src/i18n-config.ts
+  const i18nConfigPath = path.join(projectPath, "src", "i18n-config.ts");
+  const i18nConfig = `
+  export const i18n = {
+  defaultLocale: 'en',
+  ${answers.useI18n === "y" ? "locales: ['en', 'es']," : "locales: ['en'],"}
+} as const
+
+export type Locale = (typeof i18n)['locales'][number]
+`;
+
+  fs.writeFileSync(i18nConfigPath, i18nConfig);
+
+  // Add lib/get-dictionary.ts located at src/lib/get-dictionary.ts
+  const getDictionaryPath = path.join(
+    projectPath,
+    "src",
+    "lib",
+    "get-dictionary.ts"
+  );
+  const getDictionary = `
+import type { Locale } from "../../i18n-config";
+
+const dictionaries = {
+  en: () => import("../dictionaries/en.json").then((module) => module.default),
+  ${
+    answers.useI18n === "y"
+      ? 'es: () => import("../dictionaries/es.json").then((module) => module.default),'
+      : ""
+  }
+};
+
+// export const getDictionary = async (locale: Locale) => dictionaries[locale]();
+export const getDictionary = async (locale: Locale) => {
+  return dictionaries[locale]();
+};
+`;
+
+  fs.writeFileSync(getDictionaryPath, getDictionary);
+
   // Install additional dependencies
   console.log("Installing additional dependencies...");
   execSync("npm install", { stdio: "inherit" });
@@ -302,7 +342,7 @@ function addShadcn() {
   execSync("npx shadcn init", { stdio: "inherit" });
 
   // Add components/ui/theme-provider.tsx checking if directory exists
-  const componentsDir = path.join(projectPath, "src", "components");
+  const componentsDir = path.join(process.cwd(), "src", "components");
   if (!fs.existsSync(componentsDir)) {
     fs.mkdirSync(componentsDir, { recursive: true });
   }
@@ -326,8 +366,8 @@ export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
 `;
 
   fs.writeFileSync(themeProviderPath, themeProvider);
-
 }
+
 async function main() {
   const answers = await askQuestions();
   createProject(answers.projectName);

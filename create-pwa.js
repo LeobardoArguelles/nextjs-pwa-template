@@ -59,6 +59,7 @@ function customizeProject(projectPath, answers) {
     "framer-motion": "^10.16.4",
     "next-pwa": "^5.6.0",
     "tailwind-merge": "^1.14.0",
+        "next-themes": "^0.3.0",
   };
   fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
 
@@ -295,10 +296,43 @@ export default async function Root({
   execSync("npm install", { stdio: "inherit" });
 }
 
+function addShadcn() {
+  console.log("Installing shadcn...");
+  // Init shadcn accepting the first two default values, and the last one as no
+  execSync("npx shadcn init", { stdio: "inherit" });
+
+  // Add components/ui/theme-provider.tsx checking if directory exists
+  const componentsDir = path.join(projectPath, "src", "components");
+  if (!fs.existsSync(componentsDir)) {
+    fs.mkdirSync(componentsDir, { recursive: true });
+  }
+
+  const uiDir = path.join(componentsDir, "ui");
+  if (!fs.existsSync(uiDir)) {
+    fs.mkdirSync(uiDir, { recursive: true });
+  }
+
+  const themeProviderPath = path.join(uiDir, "theme-provider.tsx");
+  const themeProvider = `
+  "use client"
+
+import * as React from "react"
+import { ThemeProvider as NextThemesProvider } from "next-themes"
+import { type ThemeProviderProps } from "next-themes/dist/types"
+
+export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
+  return <NextThemesProvider {...props}>{children}</NextThemesProvider>
+}
+`;
+
+  fs.writeFileSync(themeProviderPath, themeProvider);
+
+}
 async function main() {
   const answers = await askQuestions();
   createProject(answers.projectName);
   customizeProject(path.join(process.cwd(), answers.projectName), answers);
+  addShadcn();
   console.log("Project setup complete!");
   rl.close();
 }

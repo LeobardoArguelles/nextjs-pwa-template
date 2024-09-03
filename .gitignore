@@ -1,0 +1,5 @@
+# Gitignore file for Node.js projects
+
+# Node.js
+node_modules
+

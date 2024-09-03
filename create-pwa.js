@@ -15,6 +15,16 @@ const questions = [
     default: "my-pwa-project",
   },
   {
+    name: "shortName",
+    question: "What is your project short name?",
+    default: "my-pwa",
+  },
+  {
+    name: "description",
+    question: "Describe your project",
+    default: "Generated with Leobard's PWA generator",
+  },
+  {
     name: "useI18n",
     question: "Do you want to use internationalization? (y/n)",
     default: "n",
@@ -57,39 +67,30 @@ function customizeProject(projectPath, answers) {
     "@headlessui/react": "^1.7.17",
     "@heroicons/react": "^2.0.18",
     "framer-motion": "^10.16.4",
-    "next-pwa": "^5.6.0",
     "tailwind-merge": "^1.14.0",
     "next-themes": "^0.3.0",
+    "@formatjs/intl-localematcher": "^0.5.4",
   };
   fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
 
   // Update next.config.js
   const nextConfigPath = path.join(projectPath, "next.config.mjs");
   const nextConfig = `
-import path from 'path';
-import withPWA from "next-pwa";
-
 /** @type {import('next').NextConfig} */
+import path from 'path';
+
 const nextConfig = {
   reactStrictMode: true,
   webpack: (config, { buildId, dev, isServer, defaultLoaders, webpack }) => {
+    if (!isServer) {
+      config.resolve.fallback = { fs: false };
+    }
     config.resolve.alias['public'] = path.join(process.cwd(), 'public');
     return config;
   },
-  i18n: {
-${
-  answers.useI18n === "y" ? "locales: ['en', 'es']," : "locales: ['en']," // Default to English
-}
-  defaultLocale: 'en',
-}
-
 };
 
-const pwaConfig = withPWA({
-  dest: "public",
-});
-
-export default pwaConfig(nextConfig);
+export default nextConfig;
   `;
   fs.writeFileSync(nextConfigPath, nextConfig);
 
@@ -247,8 +248,7 @@ export default function RootLayout({
   const layoutPath = path.join(langDir, "layout.tsx");
   const layout = `
 import { getDictionary } from "@/lib/get-dictionary";
-import { Locale, i18n } from "../../../i18n-config";
-import Footer from "@/components/Footer";
+import { Locale, i18n } from "@/i18n-config";
 
 export async function generateMetadata({
   params: { lang },
@@ -284,15 +284,18 @@ export default async function Root({
       </head>
       <body>
         {children}
-        <Footer dict={dict} lang={params.lang} />
       </body>
     </html>
   );
 }
 `;
 
+  fs.writeFileSync(layoutPath, layout);
+
   // Add i18n-config.ts located at src/i18n-config.ts
+  // Make sure the directory exists
   const i18nConfigPath = path.join(projectPath, "src", "i18n-config.ts");
+
   const i18nConfig = `
   export const i18n = {
   defaultLocale: 'en',
@@ -305,28 +308,24 @@ export type Locale = (typeof i18n)['locales'][number]
   fs.writeFileSync(i18nConfigPath, i18nConfig);
 
   // Add lib/get-dictionary.ts located at src/lib/get-dictionary.ts
-  const getDictionaryPath = path.join(
-    projectPath,
-    "src",
-    "lib",
-    "get-dictionary.ts"
-  );
+  // Make sure the directory exists
+  const libDir = path.join(projectPath, "src", "lib");
+  if (!fs.existsSync(libDir)) {
+    fs.mkdirSync(libDir, { recursive: true });
+  }
+
+  const getDictionaryPath = path.join(libDir, "get-dictionary.ts");
   const getDictionary = `
-import type { Locale } from "../../i18n-config";
+import type { Locale } from "@/i18n-config";
 
 const dictionaries = {
   en: () => import("../dictionaries/en.json").then((module) => module.default),
-  ${
-    answers.useI18n === "y"
-      ? 'es: () => import("../dictionaries/es.json").then((module) => module.default),'
-      : ""
-  }
 };
 
-// export const getDictionary = async (locale: Locale) => dictionaries[locale]();
 export const getDictionary = async (locale: Locale) => {
   return dictionaries[locale]();
 };
+
 `;
 
   fs.writeFileSync(getDictionaryPath, getDictionary);
@@ -368,11 +367,47 @@ export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
   fs.writeFileSync(themeProviderPath, themeProvider);
 }
 
+function addManifest(projectName, shortName, description) {
+  const manifestPath = path.join(process.cwd(), "public", "manifest.json");
+  const manifest = `
+{
+  "name": ${projectName},
+  "short_name": ${shortName},
+  "description": ${description},
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#000000",
+  "icons": [
+    {
+      "src": "/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
+
+`;
+
+  fs.writeFileSync(manifestPath, manifest);
+}
+
 async function main() {
   const answers = await askQuestions();
-  createProject(answers.projectName);
+  createProject(answers.projectName, answers.shortName);
   customizeProject(path.join(process.cwd(), answers.projectName), answers);
   addShadcn();
+  addManifest(answers.projectName, answers.shortName, answers.description);
   console.log("Project setup complete!");
   rl.close();
 }

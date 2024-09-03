@@ -42,11 +42,14 @@ This script will prompt you for the following information:
 ```
 ├── public/
 │   ├── icons/
+│   ├── images/
+│   ├── splash_screens/
 │   └── manifest.json
 ├── src/
 │   ├── app/
 │   │   └── [lang]/ (if using i18n)
 │   ├── components/
+│   │    └── ui/ (shadcn components)
 │   ├── dictionaries/ (if using i18n)
 │   └── lib/
 ├── next.config.mjs

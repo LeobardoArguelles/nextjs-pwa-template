@@ -63,15 +63,10 @@ function customizeProject(projectPath, answers) {
   fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
 
   // Update next.config.js
-  const nextConfigPath = path.join(projectPath, "next.config.js");
+  const nextConfigPath = path.join(projectPath, "next.config.mjs");
   const nextConfig = `
 import path from 'path';
 import withPWA from "next-pwa";
-
-const pwaConfig = require('next-pwa')({
-  dest: 'public',
-  disable: process.env.NODE_ENV === 'development',
-})
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -80,40 +75,37 @@ const nextConfig = {
     config.resolve.alias['public'] = path.join(process.cwd(), 'public');
     return config;
   },
-  ${
-    answers.useI18n === "y"
-      ? `
   i18n: {
-    locales: ['en', 'es'],
-    defaultLocale: 'en',
-  },
-  `
-      : ""
-  }
+${
+  answers.useI18n === "y" ? "locales: ['en', 'es']," : "locales: ['en']," // Default to English
+},
+  defaultLocale: 'en',
 }
 
+};
+
+const pwaConfig = withPWA({
+  dest: "public",
+});
+
 export default pwaConfig(nextConfig);
+
+}
   `;
   fs.writeFileSync(nextConfigPath, nextConfig);
 
-  // If using i18n, create the [lang] directory and move files
-  if (answers.useI18n === "y") {
-    const appDir = path.join(projectPath, "src", "app");
-    const langDir = path.join(appDir, "[lang]");
-    if (!fs.existsSync(langDir)) {
-      fs.mkdirSync(langDir, { recursive: true });
-    }
-    // Move app/page.tsx to app/[lang]/page.tsx
-    fs.renameSync(
-      path.join(appDir, "page.tsx"),
-      path.join(langDir, "page.tsx")
-    );
-    // Copy layout.tsx to [lang] directory
-    fs.copyFileSync(
-      path.join(appDir, "layout.tsx"),
-      path.join(langDir, "layout.tsx")
-    );
+  const appDir = path.join(projectPath, "src", "app");
+  const langDir = path.join(appDir, "[lang]");
+  if (!fs.existsSync(langDir)) {
+    fs.mkdirSync(langDir, { recursive: true });
   }
+  // Move app/page.tsx to app/[lang]/page.tsx
+  fs.renameSync(path.join(appDir, "page.tsx"), path.join(langDir, "page.tsx"));
+  // Copy layout.tsx to [lang] directory
+  fs.copyFileSync(
+    path.join(appDir, "layout.tsx"),
+    path.join(langDir, "layout.tsx")
+  );
 
   // Install additional dependencies
   console.log("Installing additional dependencies...");

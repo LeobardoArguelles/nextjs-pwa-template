@@ -71,6 +71,13 @@ function customizeProject(projectPath, answers) {
     "next-themes": "^0.3.0",
     "@formatjs/intl-localematcher": "^0.5.4",
   };
+  packageJson.scripts = {
+    "dev": "next dev & tsc --watch",
+    "build": "tsc & next build",
+    "start": "next start",
+    "lint": "next lint"
+  };
+
   fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
 
   // Update next.config.js
@@ -343,6 +350,7 @@ export const getDictionary = async (locale: Locale) => {
   // Install additional dependencies
   console.log("Installing additional dependencies...");
   execSync("npm install", { stdio: "inherit" });
+  execSync("npm i --save-dev @types/negotiator", { stdio: "inherit" });
 }
 
 function addShadcn() {

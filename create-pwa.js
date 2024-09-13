@@ -72,10 +72,10 @@ function customizeProject(projectPath, answers) {
     "@formatjs/intl-localematcher": "^0.5.4",
   };
   packageJson.scripts = {
-    "dev": "next dev & tsc --watch",
-    "build": "tsc & next build",
-    "start": "next start",
-    "lint": "next lint"
+    dev: "next dev & tsc --watch",
+    build: "tsc & next build",
+    start: "next start",
+    lint: "next lint",
   };
 
   fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
@@ -386,7 +386,13 @@ export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
 }
 
 function addManifest(projectName, shortName, description) {
-  const manifestPath = path.join(process.cwd(), "public", "manifest.json");
+  const manifestDir = path.join(process.cwd(), "public");
+  if (!fs.existsSync(manifestDir)) {
+    fs.mkdirSync(manifestDir, { recursive: true });
+  }
+
+  const manifestPath = path.join(manifestDir, "manifest.json");
+
   const manifest = `
 {
   "name": ${projectName},

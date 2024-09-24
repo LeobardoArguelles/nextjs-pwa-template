@@ -1,6 +1,6 @@
 {
-  "name": "Meditaite",
-  "short_name": "Meditaite",
+  "name": "template progressive web app",
+  "short_name": "template",
   "icons": [
     {
       "src": "/icons/android-chrome-192x192.png",
@@ -23,5 +23,6 @@
   "background_color": "#FFFFFF",
   "start_url": "/",
   "display": "standalone",
-  "orientation": "portrait"
+  "orientation": "portrait",
+  "description": "A Progressive Web App"
 }

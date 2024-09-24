@@ -1,1 +1,6 @@
-{}
+{
+  "meta": {
+    "title": "template progressive web app",
+    "description": "A Progressive Web App"
+  }
+}

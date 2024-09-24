@@ -95,7 +95,8 @@ function updateReadme(projectPath, answers) {
 
 async function main() {
   const answers = await askQuestions();
-  const projectPath = process.cwd();  // Assuming we're in the project directory
+  // Join project path with template/
+  const projectPath = path.join(__dirname, "template");
 
   updatePackageJson(projectPath, answers.projectName);
   updateManifest(projectPath, answers);

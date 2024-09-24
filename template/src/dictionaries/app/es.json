@@ -1,3 +1,7 @@
 {
-  "test": "Hello World"
+  "test": "Hello World",
+  "meta": {
+    "title": "template progressive web app",
+    "description": "A Progressive Web App"
+  }
 }

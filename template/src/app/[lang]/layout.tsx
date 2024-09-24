@@ -7,12 +7,20 @@ import { Locale, i18n } from "@/i18n-config";
 
 const inter = Inter({ subsets: ["latin"] });
 
+interface Dictionary {
+  meta: {
+    title: string;
+    description: string;
+  };
+}
+
 export async function generateMetadata({
   params: { lang },
 }: {
   params: { lang: Locale };
 }): Promise<Metadata> {
-  const dictionary = await getDictionary(lang);
+  console.log(lang);
+  const dictionary: Dictionary = await getDictionary(lang);
   return {
     title: dictionary.meta.title,
     description: dictionary.meta.description,
@@ -31,11 +39,11 @@ export async function generateMetadata({
       title: dictionary.meta.title,
       description: dictionary.meta.description,
       // TODO: Replace with your domain
-      url: "https://yourdomain.com",
+      url: "undefined",
       images: [
         {
           // TODO: Replace with your domain
-          url: "https://yourdomain.com/icons/apple-touch-icon.png",
+          url: "undefined/icons/apple-touch-icon.png",
         },
       ],
     },
@@ -53,6 +61,7 @@ export default async function RootLayout({
   children: React.ReactNode;
   params: { lang: Locale };
 }) {
+  console.log(params);
   const dict = await getDictionary(params.lang);
 
   return (
@@ -117,10 +126,10 @@ export default async function RootLayout({
           content="App para llevar el contro de obras en Arveco"
         />
         <meta property="og:site_name" content="Control de obras" />
-        <meta property="og:url" content="https://yourdomain.com" />
+        <meta property="og:url" content="undefined" />
         <meta
           property="og:image"
-          content="https://yourdomain.com/icons/apple-touch-icon.png"
+          content="undefined/icons/apple-touch-icon.png"
         />
         <link
           rel="apple-touch-startup-image"

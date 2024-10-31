@@ -9,5 +9,11 @@ const dictionaries = {
 
 export const getDictionary = async (locale: Locale) => {
   console.log("locale", locale);
-  return dictionaries[locale]();
+  if (dictionaries[locale]) {
+    return dictionaries[locale]();
+  } else {
+    console.warn(`Dictionary not found for locale: ${locale}`);
+    // Return a default dictionary or handle the case as needed
+    return dictionaries["en"](); // Example: fallback to English dictionary
+  }
 };
